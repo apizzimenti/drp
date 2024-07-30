@@ -5,7 +5,7 @@ from gerrychain.constraints import contiguous
 from gerrychain.tree import recursive_seed_part
 from functools import partial
 
-# Column names.
+# Column names. Hi Grace!
 POPULATION = "TOTPOP20"
 N = 10
 
