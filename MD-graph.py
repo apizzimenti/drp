@@ -6,4 +6,4 @@ import geopandas as gpd
 
 vtds20(MD, "MD_vtd20.zip")
 geometries = gpd.read_file("zip://./MD_vtd20.zip!MD_vtd20.shp")
-dualgraph(geometries).to_json("MD_vtd20.json")
+dualgraph(geometries).to_json("data/graphs/md/MD-VTD20.json")
