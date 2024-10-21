@@ -10,8 +10,8 @@ import numpy as np
 
 # Column names
 POPULATION = "TOTPOP20"
-N = 100
-election = Election("USS22", {"Dem": "22GUSSD", "Rep": "22GUSSR"})
+N = 10
+election = ['22GUSS', '22GEDU', '22GGOV']
 # elections = ["PRES12", "SEN12", "USH12", 
             #  "GOV14", "AG14", "COMP14", "USH14", "SSEN14", 
             #  "PRES16", "SEN16", "USH16",
@@ -21,8 +21,10 @@ election = Election("USS22", {"Dem": "22GUSSD", "Rep": "22GUSSR"})
 G = Graph.from_json("./data/graphs/sc/SC-VTD20.json")
 updaters = {
     POPULATION: updaters.Tally(POPULATION, POPULATION),
-    "USS22": election
+    # "22GUSS": Election("22GUSS", {"Dem": "22GUSSD", "Rep": "22GUSSR"})
 }
+for e in election:
+    updaters[e] = Election(e, {"Dem": e+"D", "Rep": e+"R"})
 updaters.update(demographic_updaters(["TOTPOP20", "VAP20", "APBVAP20"]))
 
 ideal = sum(data[POPULATION] for _, data in G.nodes(data=True))/7
@@ -55,20 +57,26 @@ print(apb_tally)
 
 assignment_list = [initial] # List to collect MC steps
 for (i, initial) in enumerate(M):
-    print(f"Step {i} Republican vote share for district 1: "
-          f"{initial['USS22'].percents('Rep')[1]:0.4f}")
+    # print(f"Step {i} Republican vote share for district 1: "
+    #       f"{initial['USS22'].percents('Rep')[0]:0.4f}")
+    print(f"Step {i} Republican seats: "
+        f"{seats(election, 'Rep').apply(initial)}")
+        
     apb_scores = demographic_shares({"VAP20": ["APBVAP20"]})
     apb_tally = summarize(initial, apb_scores)
-    print(apb_tally['APBVAP20_share'][1])
+    print(apb_tally['APBVAP20_share'][0])
 
     # Markov comparison 
-    rep_shares_i = assignment_list[-1]['USS22'].percents('Rep')[1]
-    rep_shares_f = initial['USS22'].percents('Rep')[1]
+    markov = 1
+    for elect, seatNum in seats(election, 'Rep').apply(initial): # considers all elections in the markov comparison
+        rep_seats_i = seats(election, 'Rep').apply(assignment_list[-1])[elect]
+        rep_seats_f = seatNum
+        markov *= float(rep_seats_f/rep_seats_i)
+    
     apb_shares_i = summarize(assignment_list[-1], apb_scores)
     apb_shares_f = summarize(initial, apb_scores)
 
-    # Two factors in the number for comparison: prioritizing republican tilt and high APB share 
-    markov = float((rep_shares_f/rep_shares_i)) 
+    # second factor: APB share  
     markov *= (float(apb_shares_f['APBVAP20_share'][1])/float(apb_shares_i['APBVAP20_share'][1]))
     
 
@@ -80,16 +88,3 @@ for (i, initial) in enumerate(M):
         if alpha <= markov:
             assignment_list.append(initial)
 
-# plot the points in the markov chain 
-xpts = [] #APBVAP share
-ypts = [] #Republican tilt as of Senate election 2022
-for plan in assignment_list:
-    apb_share = summarize(plan, apb_scores)
-    xpts.append(apb_share['APBVAP20_share'][1])
-    ypts.append(plan['USS22'].percents('Rep')[1])
-
-apb_share = np.array(xpts)
-rep_share = np.array(ypts)
-
-plt.plot(apb_share, rep_share, 'o')
-plt.show()
