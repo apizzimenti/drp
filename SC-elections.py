@@ -42,7 +42,7 @@ elections.to_csv("data/elections/sc/22G.csv", index=False)
 
 # Keep only the statewide elections, since districted elections cannot be probative
 # for the entire state.
-keep = [e for e in list(elections) if all(n not in e for n in ["SLL", "USH"])]
+keep = [e for e in list(elections) if all(n not in e for n in ["SLL"])]
 elections = elections[keep]
 
 # Merge election data.
